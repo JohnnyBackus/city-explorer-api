@@ -17,10 +17,36 @@ app.get('/', (request, response) => {
     response.send("Hellooooo");
 });
 
-app.get("/weather", (request, response) => {
-    let city = request.query.type;
-    if( weatherDataArray[type] ) {
-        response.json(weatherData[type])
+app.get('/weather', (request, response) => {
+    let lat = request.query.lat;
+    let lon = request.query.lon;
+    console.log(lat, lon);
+    if( lat && lon ) {
+        let targetCity = weatherDataArray.find((city) => 
+        city.lat === lat && city.lon === lon);
+        // console.log(targetCity);
+        console.log(targetCity.city_name);
+        const forecasts = targetCity.data.map((day) => {
+            return new Forecast(
+              day.valid_date,
+              day.weather.description,
+              day.max_temp,
+              day.low_temp
+            );
+          });
+        forecasts.unshift({city:targetCity.city_name});
+        console.log(forecasts);
+        response.json(forecasts);
     } else {
-        throw new Error("No Such List")
+        throw new Error("Sorry. Data for this location does not exist.")
     }
+});
+
+class Forecast {
+    constructor(date, description, maxTemp, lowTemp) {
+      this.date = date;
+      this.description = description;
+      this.maxTemp = maxTemp;
+      this.lowTemp = lowTemp;
+    };
+};
