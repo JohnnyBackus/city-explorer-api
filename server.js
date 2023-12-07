@@ -1,41 +1,39 @@
 'use strict';
 
 require("dotenv").config();
-// import axios from 'axios';
 const axios = require("axios")
 const express = require("express");
 const cors = require("cors");
 const app = express();
-app.use(cors());
 const PORT = process.env.PORT;
 const forecastURL = process.env.WEATHER_URL
-// const weatherDataArray = require('./data/weather.json');
+const forecastToken = process.env.WEATHER_API_KEY
+const movieURL = process.env.MOVIE_URL
+const movieToken = process.env.MOVIE_READ_ACCESS_TOKEN
 
+
+app.use(cors());
 app.listen(
     PORT, () => console.log(`listening on ${PORT}`)
 );
 
-// console.log (weatherDataArray[0].city_name)
 app.get('/', (request, response) => {
     response.send("Hellooooo");
 });
 
-
-
 app.get('/weather', async(request, response) => {
     let lat = request.query.lat;
     let lon = request.query.lon;
-    console.log(lat, lon);
+    // console.log(lat, lon);
     if (lat && lon) {
         let apiResponse = await axios.get(`${forecastURL}`,
-            {
-                params: {
-                    key: process.env.WEATHER_API_KEY,
-                    lat: lat,
-                    lon: lon
+            { params: {
+                key: forecastToken,
+                lat: lat,
+                lon: lon
                 }
             });
-        console.log(apiResponse.data)
+        // console.log(apiResponse.data)
         let forecasts = apiResponse.data.data.map(city => {
             return new Forecast(
                 city.valid_date,
@@ -44,25 +42,58 @@ app.get('/weather', async(request, response) => {
                 city.low_temp
             );
         });
-        // // console.log(targetCity);
-        // console.log(targetCity.city_name);
-        // forecasts.unshift({city:targetCity.city_name});
-        console.log(forecasts);
+        // console.log(forecasts);
         response.json(forecasts);
     } else {
         throw new Error("Sorry. Data for this location does not exist.")
     }
-    });
-    
-    class Forecast {
-        constructor(date, description, maxTemp, lowTemp) {
-            this.date = date;
-            this.description = description;
-            this.maxTemp = maxTemp;
-            this.lowTemp = lowTemp;
-        };
+});
+
+app.get('/movies', async(request, response) => {
+    let city = request.query.city;
+    if (city) {
+        let apiResponse = await axios.get(`${movieURL}`, {
+            params: {query: `${city}`},
+            headers: {
+                accept: 'application/json',
+                Authorization: `Bearer ${movieToken}`
+            }
+        });
+        let movieList = apiResponse.data.results.map(movie => {
+            return new Movie(
+                movie.title,
+                movie.overview,
+                movie.popularity,
+                movie.release_date
+            );
+        });
+        // sortedMovieList = () => movieList.sort
+        console.log(movieList);
+        response.json(movieList);
+    }
+    else {
+        throw new Error("Sorry. We are having trouble collecting movie information for this location does not exist.")
     };
-    
-    app.get("*", (request, response) => {
-        response.status(404).send("Not Found");
-    });
+});
+
+class Forecast {
+    constructor(date, description, maxTemp, lowTemp) {
+        this.date = date;
+        this.description = description;
+        this.maxTemp = maxTemp;
+        this.lowTemp = lowTemp;
+    };
+};
+ 
+class Movie {
+    constructor(title, description, popularity, release) {
+        this.title = title;
+        this.description = description;
+        this.popularity = popularity;
+        this.release = release;
+    };
+};
+
+app.get("*", (request, response) => {
+    response.status(404).send("Not Found");
+});
