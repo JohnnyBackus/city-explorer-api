@@ -39,7 +39,8 @@ app.get('/weather', async(request, response) => {
                 city.valid_date,
                 city.weather.description,
                 city.high_temp,
-                city.low_temp
+                city.low_temp,
+                city.weather.icon
             );
         });
         // console.log(forecasts);
@@ -64,10 +65,11 @@ app.get('/movies', async(request, response) => {
                 movie.title,
                 movie.overview,
                 movie.popularity,
-                movie.release_date
+                movie.release_date,
+                movie.poster_path
             );
         });
-        // sortedMovieList = () => movieList.sort
+        movieList.sort((a, b) => b.popularity - a.popularity);
         console.log(movieList);
         response.json(movieList);
     }
@@ -77,20 +79,22 @@ app.get('/movies', async(request, response) => {
 });
 
 class Forecast {
-    constructor(date, description, maxTemp, lowTemp) {
+    constructor(date, description, maxTemp, lowTemp, icon) {
         this.date = date;
         this.description = description;
         this.maxTemp = maxTemp;
         this.lowTemp = lowTemp;
+        this.icon = icon;
     };
 };
  
 class Movie {
-    constructor(title, description, popularity, release) {
+    constructor(title, description, popularity, release, image) {
         this.title = title;
         this.description = description;
         this.popularity = popularity;
         this.release = release;
+        this.img_url = `https://image.tmdb.org/t/p/w500${image}`;
     };
 };
 
